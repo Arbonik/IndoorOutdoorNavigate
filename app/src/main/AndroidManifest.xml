@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="indoormap.com">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+
+            android:name="com.here.android.maps.appid"
+
+            android:value="SW15iwX2FaOw4YoTwXz3" />
+
+        <meta-data
+
+            android:name="com.here.android.maps.apptoken"
+
+            android:value="LEVmI5myFqXraD2_poSfAA" />
+
+        <meta-data
+
+            android:name="com.here.android.maps.license.key"
+
+            android:value="BzOSAxCY2r/y8I4Wse6i6LXwDjYp4yFCUlOjW7KfMv1ft/wWPYlbSh92wb80+L5/77ZVHQdIFUNV/EELtqs+4qvQeMvJD7HZ/zUO0DNZLv7alUEEtyD/Hy4p+IPVDjkRLrcpB22UOXHZs06aLu4BGSvR6VvM2Dve59rhYroz9Tuez9nXQjIGynLVQf8yHDWEgVu7jntmYTGq6IKeOnaY0YkwdNos9f06x//94r49aW/jiRi1shjfj07h5ORJquf89PpdIYfI7C5/aTLCpy65UxOsTrVRp3kircwxRsPeR/xGqXPS7s8+zqPjhCR5DXOY8tAIaBGc/KirnSYkAu4x7i/zHliZB2C2jAPV3/3qSTtyV8IPGNDxgEHLyfnNpwiECpGgYmUgUGvpf6ehB9dSqsazjuGjZP0PyL5jw398hAI+L5PDCnbj9ESbRHBoBjO1VKTQYKc3qMtSa/q1cyb0B/VeBR8KlbQY2qcN8aBJtDZjGwOrK3AaV0VZnKdLXzn607mQI060UtlP8BEulxFdxKU00LIlwlLcE0S74raSziHRSSegA22mxR2Tg603txNwVgGZN8RwGrzmPkvcBTr3NO7JuWQkDeqmJbrktbBRx7ZCQgF0XTP2wWbrl/vLxWroE6Sw+OT1FYwJt2llq0hCJK5ePJqRPnfBeZf70OwB3E4=" />
+
+        <service
+            android:name="com.here.android.mpa.service.MapService"
+            android:label="{indoortestservice}"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="{indoortestservice}">
+                </action>
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>
