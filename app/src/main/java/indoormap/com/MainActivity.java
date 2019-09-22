@@ -29,7 +29,14 @@ import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapPolygon;
+import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.SupportMapFragment;
+import com.here.android.mpa.routing.CoreRouter;
+import com.here.android.mpa.routing.RouteOptions;
+import com.here.android.mpa.routing.RoutePlan;
+import com.here.android.mpa.routing.RouteResult;
+import com.here.android.mpa.routing.RouteWaypoint;
+import com.here.android.mpa.routing.RoutingError;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,6 +49,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    MapRoute mapRoute;
 
     // map embedded in the map fragment
     private Map map = null;
@@ -141,20 +150,20 @@ public class MainActivity extends AppCompatActivity {
                                 Map.Animation.NONE);
                         // Set the zoom level to the average between min and max
                         map.setZoomLevel((map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2);
-
-                        requestIndoorLayer();
-
+                        map.setExtrudedBuildingsVisible(false);
                         LocationDataSourceHERE m_hereDataSource = LocationDataSourceHERE.getInstance();
-                        posManager.setDataSource(m_hereDataSource);
+                        if (m_hereDataSource != null) {
+                            posManager = PositioningManager.getInstance();
+                            posManager.setDataSource(m_hereDataSource);
+                            posManager.addListener(new WeakReference<>(positionListener));
+                            posManager.start(
+                                    PositioningManager.LocationMethod.GPS_NETWORK_INDOOR);
+                            map.getPositionIndicator().setVisible(true);
 
-                        posManager = PositioningManager.getInstance();
-                        posManager.addListener(new WeakReference<>(positionListener));
-                        posManager.start(
-                                PositioningManager.LocationMethod.GPS_NETWORK_INDOOR);
-                        map.getPositionIndicator().setVisible(true);
-
-                        mapFragment.getPositionIndicator().setVisible(true);
-
+                            mapFragment.getPositionIndicator().setVisible(true);
+                        }
+                        requestIndoorLayer();
+                        CalcRoot();
                     } else {
                         System.out.println("ERROR: Cannot initialize Map Fragment");
                     }
@@ -208,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
      public void requestIndoorLayer () {
-        String indoorUrl = "https://xyz.api.here.com/hub/spaces/OSAkxUKL/iterate?access_token=AaqZ9Nh_p2S2ETqZeT483XA";
+        String indoorUrl = "https://xyz.api.here.com/hub/spaces/ZAygLuor/iterate?access_token=AZzE37lM8LZ90jRaoDoBErs";
                 RequestQueue queue = Volley.newRequestQueue(this);
                 StringRequest stringRequest = new StringRequest(Request.Method.GET, indoorUrl,
                         new Response.Listener<String>() {
@@ -216,11 +225,8 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(String response) {
                                 JSONObject jsonObject = null;
-
                                 try {
 
-
-                                    
                                     jsonObject = new JSONObject(response);
                                 }
 
@@ -256,12 +262,12 @@ public class MainActivity extends AppCompatActivity {
 
                                         mapPoligon.setLineColor(Color.RED);
 
-                                        mapPoligon.setFillColor(Color.argb(0.2f,6.0f,184.0f, 124.0f));
+                                        mapPoligon.setFillColor(Color.BLUE);
 
                                         map.addMapObject(mapPoligon);
                                     }
                                     //textView.setText(coords);
-                                    Log.d("COORDUNATE", coords.toString());
+                                    //Log.d("COORDUNATE", coords.toString());
                                 }catch (JSONException e) {
                                     e.printStackTrace();
                                 }
@@ -274,6 +280,44 @@ public class MainActivity extends AppCompatActivity {
                     }
                         });
 queue.add(stringRequest);
+    }
+    public void CalcRoot(){
+        // Declare the variable (the CoreRouter)
+        CoreRouter router = new CoreRouter();
+        // Create the RoutePlan and add two waypoints
+        RoutePlan routePlan = new RoutePlan();
+        routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.34642, 83.79069)));
+        routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.33966, 83.76858)));
+
+        // Create the RouteOptions and set its transport mode & routing type
+        RouteOptions routeOptions = new RouteOptions();
+        routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
+        routeOptions.setRouteType(RouteOptions.Type.FASTEST);
+
+        routePlan.setRouteOptions(routeOptions);
+        // Calculate the route
+        router.calculateRoute(routePlan, new RouteListener());
+
+    }
+    private class RouteListener implements CoreRouter.Listener {
+
+        // Method defined in Listener
+        public void onProgress(int percentage) {
+            // Display a message indicating calculation progress
+        }
+
+        // Method defined in Listener
+        public void onCalculateRouteFinished(List<RouteResult> routeResult, RoutingError error) {
+            // If the route was calculated successfully
+            if (error == RoutingError.NONE) {
+                // Render the route on the map
+                mapRoute = new MapRoute(routeResult.get(0).getRoute());
+                map.addMapObject(mapRoute);
+            }
+            else {
+                // Display a message indicating route calculation failure
+            }
+        }
     }
 }
 
