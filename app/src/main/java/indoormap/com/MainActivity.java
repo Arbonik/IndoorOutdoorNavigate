@@ -22,8 +22,11 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolygon;
+import com.here.android.mpa.common.GeoPosition;
+import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.OnEngineInitListener;
 //import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapPolygon;
 import com.here.android.mpa.mapping.SupportMapFragment;
@@ -33,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,6 +60,55 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] REQUIRED_SDK_PERMISSIONS = new String[] {
             Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
+    private PositioningManager posManager;
+
+    boolean paused = false;
+    private PositioningManager.OnPositionChangedListener positionListener = new
+            PositioningManager.OnPositionChangedListener() {
+
+                public void onPositionUpdated(PositioningManager.LocationMethod method,
+                                              GeoPosition position, boolean isMapMatched) {
+                    // set the center only when the app is in the foreground
+                    // to reduce CPU consumption
+                    if (!paused) {
+                        map.setCenter(position.getCoordinate(),
+                                Map.Animation.NONE);
+                    }
+                }
+
+                public void onPositionFixChanged(PositioningManager.LocationMethod method,
+                                                 PositioningManager.LocationStatus status) {
+                }
+            };
+
+    public void onResume() {
+        super.onResume();
+        paused = false;
+        if (posManager != null) {
+            posManager.start(
+                    PositioningManager.LocationMethod.GPS_NETWORK);
+        }
+    }
+
+    // To pause positioning listener
+    public void onPause() {
+        if (posManager != null) {
+            posManager.stop();
+        }
+        super.onPause();
+        paused = true;
+    }
+
+    // To remove the positioning listener
+    public void onDestroy() {
+        if (posManager != null) {
+            // Cleanup
+            posManager.removeListener(
+                    positionListener);
+        }
+        map = null;
+        super.onDestroy();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +143,17 @@ public class MainActivity extends AppCompatActivity {
                         map.setZoomLevel((map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2);
 
                         requestIndoorLayer();
+
+                        LocationDataSourceHERE m_hereDataSource = LocationDataSourceHERE.getInstance();
+                        posManager.setDataSource(m_hereDataSource);
+
+                        posManager = PositioningManager.getInstance();
+                        posManager.addListener(new WeakReference<>(positionListener));
+                        posManager.start(
+                                PositioningManager.LocationMethod.GPS_NETWORK_INDOOR);
+                        map.getPositionIndicator().setVisible(true);
+
+                        mapFragment.getPositionIndicator().setVisible(true);
 
                     } else {
                         System.out.println("ERROR: Cannot initialize Map Fragment");
