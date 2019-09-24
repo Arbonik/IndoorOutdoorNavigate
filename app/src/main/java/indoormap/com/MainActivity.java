@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -49,7 +50,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
+private GeoPosition GPosition = null;
     MapRoute mapRoute;
 
     // map embedded in the map fragment
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
                     // set the center only when the app is in the foreground
                     // to reduce CPU consumption
                     if (!paused) {
+                        GPosition = position;
                         map.setCenter(position.getCoordinate(),
                                 Map.Animation.NONE);
                     }
@@ -163,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                             mapFragment.getPositionIndicator().setVisible(true);
                         }
                         requestIndoorLayer();
-                        CalcRoot();
+                        //CalcRoot();
                     } else {
                         System.out.println("ERROR: Cannot initialize Map Fragment");
                     }
@@ -286,7 +288,12 @@ queue.add(stringRequest);
         CoreRouter router = new CoreRouter();
         // Create the RoutePlan and add two waypoints
         RoutePlan routePlan = new RoutePlan();
-        routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.34642, 83.79069)));
+        if (GPosition != null)
+        routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(GPosition.getCoordinate())));
+        else
+        {
+            routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.33926, 83.76858)));
+        }
         routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.33966, 83.76858)));
 
         // Create the RouteOptions and set its transport mode & routing type
@@ -299,6 +306,30 @@ queue.add(stringRequest);
         router.calculateRoute(routePlan, new RouteListener());
 
     }
+    public void CalcRoot(View v){
+        // Declare the variable (the CoreRouter)
+        CoreRouter router = new CoreRouter();
+        // Create the RoutePlan and add two waypoints
+        RoutePlan routePlan = new RoutePlan();
+        if (GPosition != null)
+            routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(GPosition.getCoordinate())));
+        else
+        {
+            routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.33926, 83.76858)));
+        }
+        routePlan.addWaypoint(new RouteWaypoint(new GeoCoordinate(53.3373, 83.7648)));
+
+        // Create the RouteOptions and set its transport mode & routing type
+        RouteOptions routeOptions = new RouteOptions();
+        routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
+        routeOptions.setRouteType(RouteOptions.Type.FASTEST);
+
+        routePlan.setRouteOptions(routeOptions);
+        // Calculate the route
+        router.calculateRoute(routePlan, new RouteListener());
+
+    }
+
     private class RouteListener implements CoreRouter.Listener {
 
         // Method defined in Listener
